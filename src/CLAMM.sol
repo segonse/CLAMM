@@ -10,6 +10,7 @@ contract CLAMM {
     using SafeCast for int256;
     using Position for mapping(bytes32 => Position.Info);
     using Position for Position.Info;
+    using Tick for mapping(int24 => Tick.Info);
 
     address public immutable token0;
     address public immutable token1;
@@ -35,6 +36,7 @@ contract CLAMM {
 
     Slot0 public slot0;
     mapping(bytes32 => Position.Info) public positions;
+    mapping(int24 => Tick.Info) public ticks;
 
     modifier lock() {
         require(slot0.unlocked, "locked");
@@ -82,8 +84,43 @@ contract CLAMM {
         uint256 _feeGrowthGlobal0X128 = 0;
         uint256 _feeGrowthGlobal1X128 = 0;
 
+        // if we need to update the ticks, do it
+        bool flippedLower;
+        bool flippedUpper;
+        if (liquidityDelta != 0) {
+            flippedLower = ticks.update(
+                tickLower,
+                tick,
+                liquidityDelta,
+                _feeGrowthGlobal0X128,
+                _feeGrowthGlobal1X128,
+                false,
+                maxLiquidityPerTick
+            );
+            flippedUpper = ticks.update(
+                tickUpper, tick, liquidityDelta, _feeGrowthGlobal0X128, _feeGrowthGlobal1X128, true, maxLiquidityPerTick
+            );
+
+            // if (flippedLower) {
+            //     tickBitmap.flipTick(tickLower, tickSpacing);
+            // }
+            // if (flippedUpper) {
+            //     tickBitmap.flipTick(tickUpper, tickSpacing);
+            // }
+        }
+
         //TODO fees
         position.update(liquidityDelta, 0, 0);
+
+        // clear any tick data that is no longer needed
+        if (liquidityDelta < 0) {
+            if (flippedLower) {
+                ticks.clear(tickLower);
+            }
+            if (flippedUpper) {
+                ticks.clear(tickUpper);
+            }
+        }
     }
 
     function _modifyPosition(ModifyPositionParams memory params)
