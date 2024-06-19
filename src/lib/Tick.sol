@@ -61,5 +61,7 @@ library Tick {
         info.liquidityNet = upper ? info.liquidityNet - liquidityDelta : info.liquidityNet + liquidityDelta;
     }
 
-    
+    function clear(mapping(int24 => Tick.Info) storage self, int24 tick) internal {
+        delete self[tick];
+    }
 }
