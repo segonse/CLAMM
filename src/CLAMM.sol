@@ -193,7 +193,7 @@ contract CLAMM {
         }
     }
 
-    function collecct(
+    function collect(
         address recipient,
         int24 tickLower,
         int24 tickUpper,
