@@ -18,7 +18,9 @@ library Tick {
         bool initialized;
     }
 
-    function tickSpacingToMaxLiquidityPerTick(int24 tickSpacing) internal pure returns (uint128) {
+    function tickSpacingToMaxLiquidityPerTick(
+        int24 tickSpacing
+    ) internal pure returns (uint128) {
         int24 minTick = (TickMath.MIN_TICK / tickSpacing) * tickSpacing;
         int24 maxTick = (TickMath.MAX_TICK / tickSpacing) * tickSpacing;
         uint24 numTicks = uint24((maxTick - minTick) / tickSpacing) + 1;
@@ -58,10 +60,31 @@ library Tick {
         info.liquidityGross = liquidityGrossAfter;
 
         // when the lower (upper) tick is crossed left to right (right to left), liquidity must be added (removed)
-        info.liquidityNet = upper ? info.liquidityNet - liquidityDelta : info.liquidityNet + liquidityDelta;
+        info.liquidityNet = upper
+            ? info.liquidityNet - liquidityDelta
+            : info.liquidityNet + liquidityDelta;
     }
 
-    function clear(mapping(int24 => Tick.Info) storage self, int24 tick) internal {
+    function clear(
+        mapping(int24 => Tick.Info) storage self,
+        int24 tick
+    ) internal {
         delete self[tick];
+    }
+
+    function cross(
+        mapping(int24 => Info) storage self,
+        int24 tick,
+        uint256 feeGrowthGlobal0x128,
+        uint256 feeGrowthGlobal1x128
+    ) internal returns (int128 liquidityNet) {
+        Info storage info = self[tick];
+        info.feeGrowthOutside0X128 =
+            feeGrowthGlobal0x128 -
+            info.feeGrowthOutside0X128;
+        info.feeGrowthOutside1X128 =
+            feeGrowthGlobal1x128 -
+            info.feeGrowthOutside1X128;
+        liquidityNet = info.liquidityNet;
     }
 }
