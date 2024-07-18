@@ -229,6 +229,7 @@ contract CLAMM {
         }
     }
 
+    // 流动性提供者取出交易产生的手续费收益
     function collect(
         address recipient,
         int24 tickLower,
