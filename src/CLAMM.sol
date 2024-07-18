@@ -225,7 +225,7 @@ contract CLAMM {
             IERC20(token0).transferFrom(msg.sender, address(this), amount0);
         }
         if (amount1 > 0) {
-            IERC20(token0).transferFrom(msg.sender, address(this), amount1);
+            IERC20(token1).transferFrom(msg.sender, address(this), amount1);
         }
     }
 
